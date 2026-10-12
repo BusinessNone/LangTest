@@ -1,0 +1,381 @@
+/* Opportunity portfolio, layout and component styling.
+
+   This file is CLIENT-AGNOSTIC. Every colour comes from the token layer in
+   design-system/brand-tokens.css, so rebranding the portfolio is one file.
+   Do not put hex values here.
+
+   Naming rules that keep the palette swappable:
+     - Build-type strips are named by ROLE, not colour: .ink-core, .ink-platform,
+       .ink-azure, .ink-buy, .ink-config, driven by calls[].ink in the manifest.
+     - Architecture stages are named by what the node DOES: .box.source,
+       .box.orchestrate, .box.reason, .box.human, .box.output, driven by
+       architecture[].ink. Colour literals stop being true when the palette moves.
+*/
+
+@import url('/design-system/brand-tokens.css');
+
+:root {
+  /* map the portfolio's layout variables onto the client's brand tokens */
+  --sheet: var(--surface-card);         /* white card surface */
+  --page-bg: var(--surface-page);       /* steel-grey page */
+  --sheet-edge: var(--border-subtle);   /* hairline */
+
+  --ink: var(--text-primary);           /* near-black */
+  --ink-60: var(--text-secondary);      /* grey-600 */
+  --ink-30: var(--grey-400);            /* muted hint grey */
+
+  --primary: var(--brand-primary-dark);    /* primary action, AA with white text */
+  --primary-brand: var(--brand-primary);   /* wordmark colour, identity at size */
+  --primary-dark: var(--brand-primary-deep);
+  --accent: var(--brand-accent);        /* accent, fill only, never text */
+  --steel: var(--brand-steel);
+
+  --display: var(--font-sans);
+  --body: var(--font-sans);
+  --mono: var(--font-mono);
+
+  --gap: 24px;
+  --shadow-sm: 0 1px 2px rgba(23,27,32,.06), 0 1px 1px rgba(23,27,32,.04);
+  --shadow-md: 0 4px 12px rgba(23,27,32,.10), 0 2px 4px rgba(23,27,32,.06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: inherit; }
+
+/* the client site's own ::selection rule, adopted verbatim where it has one */
+::selection { background: var(--brand-primary-deep); color: #fff; text-shadow: none; }
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.sheet {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: var(--sheet);
+  min-height: 100vh;
+  padding: 40px 48px 80px;
+  position: relative;
+  border-left: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* print registration mark retired, not part of the brand */
+.regmark { display: none; }
+
+/* brand bar , wordmark teal, its deeper step, the wheel yellow, then graphite */
+.colorbar { display: flex; height: 4px; margin-bottom: 28px; border-radius: var(--radius-pill); overflow: hidden; }
+.colorbar span { flex: 1; }
+.colorbar span:nth-child(1) { background: var(--brand-primary); }
+.colorbar span:nth-child(2) { background: var(--brand-primary-deep); }
+.colorbar span:nth-child(3) { background: var(--brand-primary-dark); }
+.colorbar span:nth-child(4) { background: var(--brand-accent); }
+.colorbar span:nth-child(5) { background: var(--brand-graphite); }
+
+/* masthead */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--grey-600);
+}
+/* Heading treatment follows the client site. Set weight, case and tracking
+   here; the colour comes from --brand-ink in the token file. */
+h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(30px, 4.4vw, 46px);
+  letter-spacing: -.02em;
+  line-height: 1.04;
+  margin: 12px 0 8px;
+  color: var(--brand-ink);
+  text-transform: uppercase;
+}
+.lede { max-width: 62ch; color: var(--ink-60); margin: 0; font-size: 16px; line-height: 1.5; }
+
+.meta {
+  display: flex; flex-wrap: wrap; gap: 8px 28px;
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--sheet-edge);
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink-60);
+}
+.meta b { color: var(--ink); font-weight: 500; }
+
+nav.top { display: flex; flex-wrap: wrap; gap: 12px 22px; margin: 26px 0 0; }
+nav.top a {
+  font-family: var(--mono); font-size: 12px; text-transform: uppercase;
+  letter-spacing: .08em; text-decoration: none; color: var(--ink-60);
+  padding-bottom: 4px; border-bottom: 2px solid transparent;
+}
+nav.top a:hover { color: var(--primary); }
+nav.top a[aria-current] { color: var(--ink); border-bottom-color: var(--primary-brand); }
+
+/* situation strip */
+.constraints { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); margin: 34px 0 6px; }
+.constraint { border-left: 3px solid var(--primary); padding-left: 14px; }
+.constraint:nth-child(2) { border-left-color: var(--brand-graphite); }
+.constraint:nth-child(3) { border-left-color: var(--brand-accent-deep); }
+.constraint h3 { font-family: var(--display); font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+.constraint p { margin: 0; font-size: 13.5px; color: var(--ink-60); }
+
+/* filters */
+.filters {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin: 40px 0 22px; padding-top: 22px; border-top: 1px solid var(--sheet-edge);
+}
+.filters .label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-30); margin-right: 6px;
+}
+.chip {
+  font-family: var(--body); font-size: 12.5px; font-weight: 600;
+  border: 1px solid var(--border-default); background: var(--surface-card);
+  padding: 6px 13px; border-radius: var(--radius-pill); cursor: pointer; color: var(--ink-60);
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.chip:hover { border-color: var(--border-strong); background: var(--surface-hover); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* the opportunity grid */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: var(--gap); }
+
+.label-card {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 20px 18px 22px;
+  transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+.label-card:hover, .label-card:focus-visible {
+  border-color: var(--border-default);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.label-card .ink-strip {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+/* Build-type strips, named by role rather than by colour so the palette can
+   change without the class names becoming lies. Brand teal marks the ERP core;
+   each step further from it moves toward steel. */
+.ink-core { background: var(--brand-primary); }        /* D365-native */
+.ink-platform { background: var(--brand-primary-dark); } /* Power Platform */
+.ink-azure { background: var(--brand-steel); }       /* Azure AI service */
+.ink-buy { background: var(--success); }             /* buy , already in the box */
+.ink-config { background: var(--grey-400); }         /* configure */
+
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.num { font-family: var(--mono); font-size: 11px; color: var(--ink-30); }
+.card-head h2 {
+  font-family: var(--display); font-weight: 700; font-size: 17px;
+  letter-spacing: -.005em; margin: 8px 0 2px; line-height: 1.25;
+}
+.tagline { font-family: var(--mono); font-size: 11px; color: var(--ink-30); text-transform: uppercase; letter-spacing: .06em; }
+.pitch { font-size: 13.5px; color: var(--ink-60); margin: 10px 0 14px; }
+
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge {
+  font-family: var(--body); font-size: 11px; font-weight: 600; letter-spacing: .01em;
+  padding: 3px 9px; border-radius: var(--radius-pill); border: 1px solid var(--border-default); color: var(--ink-60);
+  white-space: nowrap;
+}
+.badge.shortlist { background: var(--brand-graphite); color: #fff; border-color: var(--brand-graphite); }
+/* flagship carries the wheel yellow , black on yellow, never yellow on white */
+.badge.mock { background: var(--brand-accent); color: var(--brand-ink); border-color: var(--brand-accent-deep); }
+.badge.ask { color: var(--warning); border-color: #e8d49a; background: var(--warning-tint); }
+/* Group B is explicitly not a stated client ask. PRD Section 10 requires the
+   qualifier to travel with the item in any client-facing document, so it is a
+   badge on the card rather than a footnote someone has to go find. */
+.badge.rsm { color: var(--brand-steel); border-color: #ccd4d6; background: var(--brand-steel-tint); }
+.badge.whitespace { background: var(--brand-graphite); color: #fff; border-color: var(--brand-graphite); }
+/* raised on the discovery call rather than in the 446 written requirements */
+.badge.call { background: var(--brand-primary-tint); color: var(--brand-primary-dark); border-color: #b9dfe3; }
+
+/* build-type + group line on cards */
+.classline {
+  display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-30); margin: 0 0 8px;
+}
+.classline .build { color: var(--ink-60); }
+.classline .wave { color: var(--ink-30); }
+
+/* regional tenant chips , PRD Section 8 requires every extension to state
+   which of the four tenants it runs in. */
+.tenants { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.tenant {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+  padding: 2px 6px; color: var(--ink-60); background: var(--surface-sunken);
+}
+.tenant.parent { border-color: #b9dfe3; background: var(--brand-primary-tint); color: var(--brand-primary-dark); }
+.tenant.exception { border-color: #e8d49a; background: var(--warning-tint); color: var(--warning); }
+
+/* qualifier callout , unverified / RSM-authored claims must stay labelled */
+.qualifier {
+  margin: 26px 0 0; border: 1px solid var(--border-default);
+  border-left: 3px solid var(--grey-400); border-radius: var(--radius-md);
+  padding: 14px 16px; background: var(--grey-50);
+}
+.qualifier h3 {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-30); font-weight: 400; margin: 0 0 6px;
+}
+.qualifier p { margin: 0; font-size: 13px; color: var(--ink-60); }
+
+/* readiness strip , the Data 2/5 constraint that gates sequencing */
+.readiness { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
+.rd {
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+  padding: 8px 12px; background: var(--surface-card); min-width: 104px;
+}
+.rd .rd-l { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-30); }
+.rd .rd-v { font-family: var(--display); font-size: 17px; font-weight: 700; }
+.rd.low .rd-v { color: var(--warning); }
+.rd.mid .rd-v { color: var(--ink); }
+.rd.high .rd-v { color: var(--success); }
+
+/* detail (brief) page */
+.back {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--body); font-size: 14px; font-weight: 600;
+  color: var(--ink); text-decoration: none;
+  border: 1px solid var(--border-strong); background: var(--surface-card);
+  padding: 10px 18px; border-radius: var(--radius-md);
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
+}
+.back:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.detail-head { margin-top: 22px; }
+.detail-head h1 {
+  font-size: clamp(26px, 3.6vw, 38px); font-weight: 800;
+  text-transform: none; letter-spacing: -.015em;  /* titles run long , sentence case */
+}
+.prose { max-width: 68ch; }
+.prose p { color: var(--ink-60); }
+blockquote {
+  margin: 22px 0; padding: 2px 0 2px 16px;
+  border-left: 3px solid var(--primary);
+  font-family: var(--display); font-size: 18px; font-style: italic; font-weight: 400; color: var(--ink);
+  max-width: 62ch; line-height: 1.45;
+}
+blockquote cite { display: block; font-family: var(--mono); font-size: 11px; font-style: normal; color: var(--ink-30); margin-top: 8px; }
+
+h2.section {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-30); margin: 46px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--sheet-edge);
+}
+
+/* reference architecture flow */
+.arch { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; }
+.arch .box {
+  flex: 1 1 150px; min-width: min(140px, 100%);
+  border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 12px;
+  background: var(--surface-card);
+}
+/* Pipeline stages, named by what the node does. Reason steps carry brand teal,
+   human steps carry amber, so a diagram reads by role at a glance. */
+.arch .box.reason { border-color: #b9dfe3; background: var(--brand-primary-tint); }
+.arch .box.orchestrate { border-color: var(--border-default); background: var(--surface-sunken); }
+.arch .box.output { border-color: #cfe6cb; background: var(--success-tint); }
+.arch .box.human { border-color: #e8d49a; background: var(--warning-tint); }
+.arch .box.source { border-color: var(--border-default); background: var(--grey-50); }
+.arch .box b { display: block; font-family: var(--display); font-size: 13px; font-weight: 700; }
+.arch .box span { font-family: var(--mono); font-size: 10.5px; color: var(--ink-60); }
+.arch .arrow { align-self: center; color: var(--ink-30); font-size: 14px; }
+
+/* io panel */
+.io { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.io h3 { font-family: var(--display); font-size: 14px; font-weight: 700; margin: 0 0 10px; }
+.io ul { margin: 0; padding-left: 18px; color: var(--ink-60); font-size: 13.5px; }
+.io li { margin-bottom: 6px; }
+
+.fields { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.field {
+  font-family: var(--mono); font-size: 11px; color: var(--ink);
+  background: var(--surface-sunken); border: 1px solid var(--sheet-edge); border-radius: var(--radius-sm); padding: 3px 7px;
+}
+
+.ask-box {
+  margin-top: 26px; border: 1px solid var(--border-default); border-left: 3px solid var(--warning);
+  border-radius: var(--radius-md); padding: 16px 18px; background: var(--warning-tint);
+}
+.ask-box.mockable { border-left-color: var(--success); background: var(--success-tint); }
+.ask-box.reuse { border-left-color: var(--brand-primary); background: var(--brand-primary-tint); }
+.ask-box h3 { font-family: var(--display); font-size: 14px; font-weight: 700; margin: 0 0 6px; }
+.ask-box p { margin: 0 0 6px; font-size: 13.5px; color: var(--ink-60); }
+
+/* data-asks table */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  text-align: left; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-30); font-weight: 400;
+  padding: 8px 10px; border-bottom: 1px solid var(--border-default);
+}
+td { padding: 12px 10px; border-bottom: 1px solid var(--sheet-edge); vertical-align: top; color: var(--ink-60); }
+td.title { color: var(--ink); font-weight: 600; }
+td a { color: var(--text-link); }
+td a:hover { color: var(--text-link-hover); }
+tr:hover td { background: var(--surface-hover); }
+
+footer {
+  margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--sheet-edge);
+  font-family: var(--mono); font-size: 11px; color: var(--ink-30);
+}
+
+/* tablet: three constraint columns get too narrow before they need to stack */
+@media (max-width: 900px) {
+  .sheet { padding: 34px 28px 70px; }
+  .constraints { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 720px) {
+  .sheet { padding: 28px 18px 60px; border-left: 0; border-right: 0; }
+  .constraints, .io { grid-template-columns: 1fr; }
+
+  /* stacked flow: flex-basis becomes a *height* in a column, so opt out of it */
+  .arch { flex-direction: column; }
+  .arch .box { flex: 0 0 auto; }
+  .arch .arrow { align-self: flex-start; margin-left: 18px; transform: rotate(90deg); }
+
+  .meta { gap: 10px 0; flex-direction: column; }
+
+  /* prose tables reflow into labelled cards , three columns don't fit a phone */
+  .sheet table, .sheet thead, .sheet tbody, .sheet tr, .sheet td { display: block; width: 100%; }
+  .sheet thead { display: none; }
+  .sheet tr {
+    border: 1px solid var(--sheet-edge); border-radius: var(--radius-md);
+    padding: 12px 14px; margin-bottom: 12px; background: var(--surface-card);
+  }
+  .sheet tr:hover td { background: none; }
+  .sheet td { border: 0; padding: 6px 0; }
+  .sheet td[data-label]::before {
+    content: attr(data-label);
+    display: block; margin-bottom: 2px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-30);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

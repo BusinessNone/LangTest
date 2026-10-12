@@ -1,0 +1,70 @@
+/* Brand tokens for the opportunity portfolio.
+
+   THIS FILE IS THE ONLY PLACE HEX VALUES LIVE. app.css maps layout variables
+   onto the tokens below, so rebranding the portfolio is one file. The values
+   shipped here are a neutral default so a fresh template renders correctly.
+   Replace them per client using the method below, and record what you found.
+
+   HOW TO DERIVE THEM, in two passes.
+
+   Pass 1, sample from screenshots of the live site.
+     Find the wordmark colour by PIXEL COUNT, not by eye. Find any accent that
+     appears as a spot colour against otherwise neutral photography.
+
+   Pass 2, confirm against the site's own stylesheet.
+     ::selection background often independently corroborates the primary.
+     html font-family: adopt verbatim if it is a system stack, which also
+     leaves the portfolio with no external font dependency.
+
+   THE TRAP. Do not read :root top-down. Marketing sites are full of framework
+   defaults that are not the brand:
+     --wp--preset--*   WordPress core
+     --uk-*            UIkit
+     --ur-*            User Registration plugin
+   Adopting those will rebrand the portfolio a colour the client has never used.
+
+   CHECK CONTRAST BEFORE ASSIGNING ROLES. A wordmark colour is usually fine for
+   a brand bar at size and fails AA as a button fill or body text. When it does,
+   --brand-primary-dark carries anything with white text on it while reading as
+   the same hue. That split is the whole reason these two tokens exist.
+   If the site's body grey fails AA, do not adopt it. This is a dense reading
+   document, not a marketing page.
+
+   NAMED BY ROLE, NOT COLOUR. The tokens below say primary and accent, never
+   teal and yellow, because a colour name stops being true the moment the
+   palette moves. Same rule applies to .ink-* and .box.* classes in app.css.
+
+   RECORD THE DERIVATION. Fill in the block below for each client so nobody has
+   to re-reason the palette, and so a later "correction" cannot quietly undo it.
+
+     Sampled from:   <url>
+     Wordmark:       <hex>  (<n> px at that exact value)
+     Accent:         <hex>  (where it appears)
+     ::selection:    <hex>  (corroborates / does not corroborate)
+     Font stack:     <value, adopted verbatim or not, and why>
+     Not brand:      <framework defaults found in :root, listed so they stay out>
+     Still to confirm: <official token names, tints, shades>
+*/
+
+:root {
+  /* Identity at size. Brand bar, build-type strips, large display. */
+  --brand-primary:       #2f5d62;
+  /* Anything text-bearing: buttons, links, active chips. Must clear AA on white. */
+  --brand-primary-dark:  #24484c;
+  /* Deepest step. ::selection, pressed states. */
+  --brand-primary-deep:  #1a3438;
+  /* Wash behind callouts and active rows. */
+  --brand-primary-tint:  #eaf1f1;
+
+  /* Accent. FILL ONLY, always with dark text on it. Never accent text on white. */
+  --brand-accent:        #e8c547;
+  --brand-accent-deep:   #a96a00;   /* caution in body content */
+
+  /* Type. Headings carry the client's weight and case; this is their colour. */
+  --brand-ink:           #101418;
+
+  /* Secondary structure. Neutral, never competes with the primary. */
+  --brand-steel:         #4a565a;
+  --brand-steel-tint:    #eef0f1;
+  --brand-graphite:      #6b7679;
+}

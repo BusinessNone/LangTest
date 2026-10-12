@@ -1,0 +1,478 @@
+/* Demo shell — Microsoft Power Apps (model-driven, Fluent UI) look & feel.
+   Shared by every /m/<slug>/ demo. Pure static, no dependencies. */
+
+:root{
+  --font: "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --mono: "Cascadia Code","Consolas",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --canvas:#f5f5f5;         /* app canvas background */
+  --surface:#ffffff;
+  --surface-alt:#faf9f8;
+  --stroke:#edebe9;
+  --stroke-2:#e1dfdd;
+  --stroke-3:#d2d0ce;
+
+  --ink:#201f1e;            /* primary text */
+  --ink-2:#323130;
+  --ink-3:#605e5c;          /* secondary text */
+  --ink-4:#8a8886;          /* tertiary / hints */
+
+  --accent:#0f6cbd;         /* per-app, overridden inline */
+  --accent-ink:#ffffff;
+  --accent-wash:#eff6fc;
+
+  --ok:#0e700e; --ok-wash:#e7f4e4;
+  --warn:#8a6a00; --warn-wash:#fff4ce; --warn-line:#f2c661;
+  --err:#a4262c; --err-wash:#fde7e9;
+  --info:#0f6cbd; --info-wash:#eff6fc;
+  --straw:#b8860b;          /* the amber "strawman / AI proposes" step */
+  --straw-wash:#fdf3d8; --straw-line:#eccb74;
+
+  --shadow-2:0 1.6px 3.6px rgba(0,0,0,.13),0 .3px .9px rgba(0,0,0,.11);
+  --shadow-4:0 3.2px 7.2px rgba(0,0,0,.13),0 .6px 1.8px rgba(0,0,0,.11);
+  --shadow-8:0 6.4px 14.4px rgba(0,0,0,.13),0 1.2px 3.6px rgba(0,0,0,.11);
+  --radius:6px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--font);color:var(--ink);
+  background:var(--canvas);font-size:14px;line-height:1.4;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button{font-family:inherit}
+a{color:inherit}
+
+/* ============ App frame ============ */
+.pa{display:grid;grid-template-rows:48px minmax(0,1fr);height:100vh;height:100dvh;overflow:hidden}
+
+/* header (Fluent unified app bar) */
+.pa-appbar{
+  grid-row:1;display:flex;align-items:center;gap:0;min-width:0;
+  background:var(--accent);color:var(--accent-ink);
+  padding:0 4px 0 0;box-shadow:var(--shadow-2);z-index:30;position:relative;
+}
+.pa-waffle{flex:none;width:48px;height:48px;display:grid;place-items:center;border:0;background:transparent;color:inherit;cursor:pointer;opacity:.92}
+.pa-waffle:hover{background:rgba(255,255,255,.12)}
+.pa-briefback{flex:none;display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 16px 0 12px;margin:0 6px 0 2px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16);color:#fff;border-radius:7px;font-size:13.5px;font-weight:600;text-decoration:none;white-space:nowrap}
+.pa-briefback:hover{background:#fff;color:var(--accent)}
+.pa-briefback svg{width:17px;height:17px;flex:none}
+/* the app name is the only elastic item in the bar — it truncates, never wraps */
+.pa-appname{
+  flex:0 1 auto;min-width:0;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  font-weight:600;font-size:15px;letter-spacing:.1px;padding-right:14px;
+}
+.pa-appname .dot{opacity:.72;font-weight:400}
+.pa-appname small{opacity:.8;font-weight:400;font-size:12px}
+.pa-appbar-sp{flex:1 1 auto;min-width:6px}
+.pa-appbar-tools{flex:none;display:flex;align-items:center;gap:2px;padding-right:6px}
+.pa-iconbtn{flex:none;width:36px;height:36px;border:0;background:transparent;color:inherit;border-radius:4px;display:grid;place-items:center;cursor:pointer;opacity:.94}
+.pa-iconbtn:hover{background:rgba(255,255,255,.14)}
+.pa-avatar{flex:none;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:12px;font-weight:600;margin-left:4px}
+.pa-env{flex:none;font-size:11.5px;opacity:.85;padding:2px 8px;border:1px solid rgba(255,255,255,.34);border-radius:3px;margin-right:6px;white-space:nowrap}
+
+/* body: nav rail + content.
+   Tracks are assigned explicitly so that out-of-flow chrome (the mobile scrim)
+   can never claim a cell and push the content into an implicit second row. */
+.pa-body{grid-row:2;display:grid;grid-template-columns:auto minmax(0,1fr);min-height:0;position:relative}
+.pa-rail{
+  grid-column:1;grid-row:1;
+  width:220px;background:var(--surface);border-right:1px solid var(--stroke);
+  display:flex;flex-direction:column;padding:8px 0;overflow-y:auto;transition:width .12s ease;
+}
+.pa-rail.collapsed{width:48px}
+.pa-rail.collapsed .pa-nav-label,.pa-rail.collapsed .pa-nav-group{display:none}
+.pa-nav-group{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-4);padding:12px 16px 4px}
+.pa-nav{display:flex;align-items:center;gap:11px;padding:0 14px;height:38px;flex:none;border:0;background:transparent;width:100%;cursor:pointer;color:var(--ink-2);text-align:left;font-size:13.5px;position:relative;border-radius:0}
+.pa-nav-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pa-nav:hover{background:var(--surface-alt)}
+.pa-nav.active{background:var(--accent-wash);color:var(--accent);font-weight:600}
+.pa-nav.active::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--accent)}
+.pa-nav svg{width:18px;height:18px;flex:none;opacity:.85}
+.pa-nav.active svg{opacity:1}
+
+/* `flex:none` on the children below is load-bearing: the content column has a
+   definite height, so flex items would otherwise shrink under their own content
+   and the sticky command bar would collapse on top of the page. */
+.pa-content{min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;background:var(--canvas);display:flex;flex-direction:column}
+
+/* command bar */
+.pa-cmdbar{
+  flex:none;display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--surface);
+  border-bottom:1px solid var(--stroke);position:sticky;top:0;z-index:20;min-height:44px;flex-wrap:wrap;
+}
+/* the scrollable run of command buttons */
+.pa-cmdgroup{display:flex;align-items:center;gap:2px;min-width:0;flex:1 1 auto}
+.pa-cmdgroup.right{flex:0 0 auto;justify-content:flex-end}
+.pa-cmd{flex:none;display:flex;align-items:center;gap:7px;height:32px;padding:0 10px;border:0;background:transparent;color:var(--ink-2);font-size:13px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.pa-cmd:hover{background:var(--surface-alt)}
+.pa-cmd svg{width:16px;height:16px;opacity:.8;flex:none}
+.pa-cmd.primary{color:var(--accent);font-weight:600}
+.pa-cmd.primary svg{opacity:1}
+.pa-cmd.backbtn{border:1px solid var(--stroke-3);font-weight:600;height:34px;padding:0 15px}
+.pa-cmd.backbtn:hover{background:var(--accent-wash);border-color:var(--accent);color:var(--accent)}
+.pa-cmd.backbtn svg{opacity:1}
+.pa-cmd-sep{flex:none;width:1px;height:20px;background:var(--stroke-2);margin:0 6px}
+.pa-cmdbar-sp{flex:1 1 auto}
+.pa-search{flex:0 1 260px;display:flex;align-items:center;gap:7px;height:32px;padding:0 10px;background:var(--surface-alt);border:1px solid var(--stroke-2);border-radius:4px;min-width:180px}
+.pa-search svg{width:15px;height:15px;opacity:.55;flex:none}
+.pa-search input{border:0;background:transparent;outline:none;font-size:13px;width:100%;min-width:0;color:var(--ink)}
+
+/* breadcrumb (detail level) */
+.pa-crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3);min-width:0;flex:1 1 auto}
+.pa-crumb a{color:var(--accent);text-decoration:none;cursor:pointer;white-space:nowrap;flex:none}
+.pa-crumb a:hover{text-decoration:underline}
+.pa-crumb b{color:var(--ink);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pa-crumb svg{width:13px;height:13px;opacity:.5;flex:none}
+
+/* page padding */
+.pa-page{flex:none;padding:16px 20px 40px;max-width:1200px;width:100%}
+.pa-page-wide{max-width:100%}
+
+/* view title */
+.pa-viewhead{display:flex;align-items:baseline;gap:12px;margin:2px 0 14px}
+.pa-viewhead h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.2px}
+.pa-viewhead .sub{color:var(--ink-3);font-size:13px}
+
+/* ============ KPI tiles ============ */
+.pa-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.pa-kpi{background:var(--surface);border:1px solid var(--stroke);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-2);position:relative;overflow:hidden}
+.pa-kpi .k-label{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:.2px}
+.pa-kpi .k-val{font-size:28px;font-weight:600;margin:6px 0 2px;letter-spacing:-.5px;line-height:1}
+.pa-kpi .k-sub{font-size:11.5px;color:var(--ink-4)}
+.pa-kpi .k-tone{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.pa-kpi.ok .k-tone{background:var(--ok)} .pa-kpi.ok .k-val{color:var(--ok)}
+.pa-kpi.warn .k-tone{background:var(--straw)} .pa-kpi.warn .k-val{color:var(--straw)}
+.pa-kpi.err .k-tone{background:var(--err)} .pa-kpi.err .k-val{color:var(--err)}
+
+/* ============ Data grid ============ */
+.pa-gridwrap{background:var(--surface);border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden}
+.pa-tablescroll{overflow-x:auto}
+table.pa-grid{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+table.pa-grid thead th{
+  text-align:left;font-weight:600;color:var(--ink-3);font-size:12px;padding:9px 14px;
+  border-bottom:1px solid var(--stroke-2);background:var(--surface-alt);white-space:nowrap;position:sticky;top:0;
+}
+table.pa-grid thead th .sortarrow{opacity:.5;font-size:10px;margin-left:4px}
+table.pa-grid tbody td{padding:9px 14px;border-bottom:1px solid var(--stroke);vertical-align:middle;white-space:nowrap}
+table.pa-grid tbody tr{cursor:pointer;transition:background .06s}
+table.pa-grid tbody tr:hover{background:var(--accent-wash)}
+table.pa-grid tbody tr:last-child td{border-bottom:0}
+.pa-grid .cell-primary{color:var(--accent);font-weight:600}
+.pa-grid .cell-mono{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.pa-grid .cell-num{text-align:right;font-variant-numeric:tabular-nums}
+.pa-grid .checkcol{width:36px;text-align:center;color:var(--ink-4)}
+.pa-rowcount{padding:9px 14px;font-size:12px;color:var(--ink-4);border-top:1px solid var(--stroke);background:var(--surface-alt)}
+
+/* ============ Gallery cards ============ */
+.pa-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pa-gcard{background:var(--surface);border:1px solid var(--stroke);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-2);cursor:pointer;transition:box-shadow .1s,transform .1s;border-left:3px solid var(--accent)}
+.pa-gcard:hover{box-shadow:var(--shadow-8);transform:translateY(-1px)}
+.pa-gcard h3{margin:0 0 3px;font-size:14.5px;font-weight:600}
+.pa-gcard .g-sub{font-size:12px;color:var(--ink-3);margin-bottom:10px;font-family:var(--mono)}
+.pa-gcard .g-row{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;border-top:1px solid var(--stroke)}
+.pa-gcard .g-row .l{color:var(--ink-3)} .pa-gcard .g-row .v{font-weight:600}
+
+/* ============ Badges / status ============ */
+.pa-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:11px;white-space:nowrap;line-height:1.7}
+.pa-badge .bdot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.pa-badge.ok{background:var(--ok-wash);color:var(--ok)}
+.pa-badge.warn{background:var(--straw-wash);color:var(--straw)}
+.pa-badge.err{background:var(--err-wash);color:var(--err)}
+.pa-badge.info{background:var(--info-wash);color:var(--info)}
+.pa-badge.neutral{background:#f3f2f1;color:var(--ink-3)}
+.pa-badge.straw{background:var(--straw-wash);color:var(--straw)}
+
+/* confidence meter */
+.pa-conf{display:inline-flex;align-items:center;gap:7px;min-width:96px}
+.pa-conf .bar{flex:1;height:6px;border-radius:3px;background:#edebe9;overflow:hidden;min-width:52px}
+.pa-conf .bar i{display:block;height:100%;border-radius:3px;background:var(--ok)}
+.pa-conf.mid .bar i{background:var(--straw)}
+.pa-conf.low .bar i{background:var(--err)}
+.pa-conf .pct{font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-3);min-width:30px}
+
+/* ============ Detail form ============ */
+.pa-detail{background:var(--surface);border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden}
+.pa-detailhead{padding:16px 20px 0}
+.pa-detailhead .dh-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.pa-detailhead h1{font-size:19px;font-weight:600;margin:0 0 2px}
+.pa-detailhead .dh-sub{color:var(--ink-3);font-size:13px;font-family:var(--mono)}
+.pa-detailhead .dh-status{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pa-quickfacts{display:flex;gap:26px;flex-wrap:wrap;margin:14px 0 0;padding:12px 0 0;border-top:1px solid var(--stroke)}
+.pa-quickfact .qf-l{font-size:11px;color:var(--ink-4);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.pa-quickfact .qf-v{font-size:15px;font-weight:600;margin-top:2px}
+
+/* tabs */
+.pa-tabs{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--stroke-2);flex-wrap:wrap}
+.pa-tab{border:0;background:transparent;padding:9px 12px;font-size:13px;color:var(--ink-3);cursor:pointer;position:relative;border-radius:4px 4px 0 0;font-weight:500}
+.pa-tab:hover{background:var(--surface-alt);color:var(--ink)}
+.pa-tab.active{color:var(--accent);font-weight:600}
+.pa-tab.active::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2.5px;background:var(--accent);border-radius:2px}
+
+.pa-tabbody{padding:20px}
+.pa-cols{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+@media(max-width:900px){.pa-cols{grid-template-columns:1fr}}
+
+/* form sections */
+.pa-section{margin-bottom:22px}
+.pa-section > h4{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 12px;padding-bottom:7px;border-bottom:1px solid var(--stroke);display:flex;align-items:center;gap:8px}
+.pa-section > h4 svg{width:16px;height:16px;opacity:.6;flex:none}
+.pa-step .st-dot svg{width:15px;height:15px}
+.pa-check .c-ico svg{width:13px;height:13px}
+.pa-fields{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 26px}
+.pa-fields.one{grid-template-columns:1fr}
+@media(max-width:640px){.pa-fields{grid-template-columns:1fr}}
+.pa-field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pa-field .f-l{font-size:11.5px;color:var(--ink-3);font-weight:600}
+.pa-field .f-v{font-size:14px;color:var(--ink);padding:7px 10px;border:1px solid var(--stroke-2);border-radius:4px;background:var(--surface-alt);min-height:34px;display:flex;align-items:center;gap:8px;word-break:break-word}
+.pa-field .f-v.plain{border:0;background:transparent;padding:2px 0;min-height:0}
+.pa-field .f-v.mono{font-family:var(--mono);font-size:12.5px}
+.pa-field.wide{grid-column:1/-1}
+
+/* AI strawman panel */
+.pa-ai{background:var(--straw-wash);border:1px solid var(--straw-line);border-radius:var(--radius);padding:14px 16px}
+.pa-ai .ai-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;color:#7a5c00;margin-bottom:8px}
+.pa-ai .ai-head svg{width:16px;height:16px}
+.pa-ai p{margin:0 0 10px;font-size:13px;color:#5f4a08;line-height:1.5}
+.pa-ai .ai-flags{display:flex;flex-direction:column;gap:6px}
+.pa-ai .ai-flag{display:flex;gap:8px;font-size:12.5px;color:#5f4a08;align-items:flex-start}
+.pa-ai .ai-flag svg{width:14px;height:14px;margin-top:2px;flex:none}
+.pa-ai .ai-actions{display:flex;gap:8px;margin-top:12px}
+.pa-btn{border:1px solid var(--stroke-3);background:var(--surface);color:var(--ink-2);font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:4px;cursor:pointer}
+.pa-btn:hover{background:var(--surface-alt)}
+.pa-btn.accent{background:var(--straw);border-color:var(--straw);color:#fff}
+.pa-btn.accent:hover{filter:brightness(1.06)}
+
+/* side cards */
+.pa-side{background:var(--surface-alt);border:1px solid var(--stroke);border-radius:var(--radius);padding:14px}
+.pa-side h4{font-size:12px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.3px;margin:0 0 10px}
+.pa-side .s-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--stroke);font-size:12.5px}
+.pa-side .s-row:first-of-type{border-top:0}
+.pa-side .s-row .l{color:var(--ink-3)} .pa-side .s-row .v{font-weight:600;text-align:right}
+
+/* related list */
+.pa-rel{border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden}
+.pa-rel .r-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--stroke);font-size:12.5px;background:var(--surface)}
+.pa-rel .r-item:first-child{border-top:0}
+.pa-rel .r-item .r-name{font-weight:600}
+.pa-rel .r-item .r-meta{color:var(--ink-3);font-size:11.5px}
+
+/* generic block table (inside tabs) */
+.pa-blockscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pa-blocktable{width:100%;min-width:420px;border-collapse:collapse;font-size:13px}
+.pa-blocktable th{text-align:left;font-size:11.5px;color:var(--ink-3);font-weight:600;padding:8px 12px;border-bottom:1px solid var(--stroke-2);background:var(--surface-alt)}
+.pa-blocktable td{padding:8px 12px;border-bottom:1px solid var(--stroke);vertical-align:middle}
+.pa-blocktable tr:last-child td{border-bottom:0}
+.pa-blocktable .num{text-align:right;font-variant-numeric:tabular-nums}
+.pa-blocktable .tot td{font-weight:700;background:var(--surface-alt);border-top:2px solid var(--stroke-2)}
+
+/* process / timeline steps */
+.pa-steps{display:flex;flex-direction:column;gap:0}
+.pa-step{display:grid;grid-template-columns:32px 1fr;gap:12px;position:relative;padding-bottom:16px}
+.pa-step:not(:last-child)::before{content:"";position:absolute;left:15px;top:30px;bottom:0;width:2px;background:var(--stroke-2)}
+.pa-step .st-dot{width:30px;height:30px;border-radius:50%;background:var(--accent-wash);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:12px;z-index:1;border:1px solid var(--accent)}
+.pa-step.done .st-dot{background:var(--ok-wash);color:var(--ok);border-color:var(--ok)}
+.pa-step.straw .st-dot{background:var(--straw-wash);color:var(--straw);border-color:var(--straw-line)}
+.pa-step .st-body h5{margin:4px 0 3px;font-size:13.5px;font-weight:600}
+.pa-step .st-body p{margin:0;font-size:12.5px;color:var(--ink-3)}
+.pa-step .st-meta{font-size:11.5px;color:var(--ink-4);font-family:var(--mono);margin-top:3px}
+
+/* hierarchy / graph (simple indented tree) */
+.pa-tree{font-size:13px}
+.pa-node{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--stroke-2);border-radius:5px;background:var(--surface);margin-bottom:6px;box-shadow:var(--shadow-2)}
+.pa-node .n-type{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:3px;background:var(--accent-wash);color:var(--accent)}
+.pa-node .n-name{font-weight:600}
+.pa-node .n-edge{font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+.pa-tree .lvl1{margin-left:26px}
+.pa-tree .lvl2{margin-left:52px}
+.pa-tree .lvl3{margin-left:78px}
+.pa-branchline{position:relative}
+
+/* bars (margin etc.) */
+.pa-bars{display:flex;flex-direction:column;gap:11px}
+.pa-barrow{display:grid;grid-template-columns:150px minmax(0,1fr) auto;align-items:center;gap:12px;font-size:12.5px}
+.pa-barrow .b-label{color:var(--ink-2);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pa-barrow .b-track{display:block;height:20px;background:#f0eff0;border-radius:3px;overflow:hidden;position:relative}
+/* the fill is a span — without display:block its percentage width is ignored */
+.pa-barrow .b-fill{display:block;height:100%;background:var(--accent);border-radius:3px}
+.pa-barrow.ok .b-fill{background:var(--ok)} .pa-barrow.warn .b-fill{background:var(--straw)} .pa-barrow.err .b-fill{background:var(--err)}
+.pa-barrow .b-val{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:56px}
+
+/* checks (compliance pass/fail) */
+.pa-checks{display:flex;flex-direction:column;gap:8px}
+.pa-check{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--stroke);border-radius:5px;background:var(--surface)}
+.pa-check .c-ico{width:20px;height:20px;border-radius:50%;display:grid;place-items:center}
+.pa-check.pass .c-ico{background:var(--ok-wash);color:var(--ok)}
+.pa-check.fail .c-ico{background:var(--err-wash);color:var(--err)}
+.pa-check.review .c-ico{background:var(--straw-wash);color:var(--straw)}
+.pa-check .c-rule{font-weight:600;font-size:13px}
+.pa-check .c-ev{font-size:12px;color:var(--ink-3);margin-top:2px}
+
+/* callout / note */
+.pa-note{display:flex;gap:10px;padding:11px 14px;border-radius:5px;background:var(--info-wash);border:1px solid #cfe4f6;font-size:12.5px;color:#204b6e;margin-bottom:16px}
+.pa-note svg{width:16px;height:16px;flex:none;margin-top:1px}
+.pa-note.straw{background:var(--straw-wash);border-color:var(--straw-line);color:#5f4a08}
+
+/* empty */
+.pa-empty{padding:40px;text-align:center;color:var(--ink-4)}
+
+/* mobile nav scrim — always out of flow so it never occupies a grid cell */
+.pa-scrim{
+  display:none;position:fixed;inset:48px 0 0 0;background:rgba(0,0,0,.4);
+  z-index:24;opacity:0;pointer-events:none;transition:opacity .16s;
+}
+
+/* home link chip (back to strawman site) */
+.pa-home{position:fixed;left:56px;bottom:14px;z-index:40;display:none}
+
+/* small helpers */
+.mono{font-family:var(--mono)}
+.muted{color:var(--ink-3)}
+.nowrap{white-space:nowrap}
+.right{text-align:right}
+.tabhide{display:none !important}
+.pa-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3);margin-top:10px}
+.pa-legend span{display:inline-flex;align-items:center;gap:6px}
+.pa-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* every demo states that its numbers are illustrative — these are
+   strawmen to react to, and a client should never mistake one for a report */
+.pa-demonote{margin-top:14px;padding-top:12px;border-top:1px solid var(--stroke-2);font-size:11.5px;line-height:1.5;color:var(--ink-4);max-width:88ch}
+
+/* ---- laptop / small desktop: shed the optional app-bar chrome first ---- */
+@media(max-width:1024px){
+  .pa-env{display:none}
+}
+@media(max-width:900px){
+  .pa-appname small,.pa-appname .dot{display:none}
+}
+
+/* ---- tablet: the rail is still docked, but icon-only by default ---- */
+@media(max-width:860px) and (min-width:721px){
+  .pa-rail{width:200px}
+}
+
+/* ---- phone: the rail becomes an overlay drawer ---- */
+@media(max-width:720px){
+  .pa-rail{
+    position:absolute;left:0;top:0;bottom:0;z-index:25;
+    width:min(80vw,260px);height:auto;box-shadow:var(--shadow-8);
+    transition:transform .18s ease;overscroll-behavior:contain;
+  }
+  .pa-rail.collapsed{transform:translateX(-100%);width:min(80vw,260px)}
+  .pa-rail.collapsed .pa-nav-label,.pa-rail.collapsed .pa-nav-group{display:block}
+  .pa-nav{height:44px}
+  .pa-scrim{display:block}
+  .pa-rail:not(.collapsed) + .pa-scrim{opacity:1;pointer-events:auto}
+
+  /* command bar: one scrollable run of buttons, search on its own full row */
+  .pa-cmdbar{padding:6px 8px;gap:6px}
+  .pa-cmdgroup,.pa-cmdgroup.right{
+    flex:1 1 100%;flex-wrap:nowrap;justify-content:flex-start;
+    overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+    /* fade the trailing edge so the row reads as scrollable */
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+  }
+  .pa-cmdgroup::-webkit-scrollbar{display:none}
+  .pa-crumb{flex:1 1 100%}
+  .pa-search{flex:1 1 100%;min-width:0}
+
+  .pa-cols{grid-template-columns:1fr}
+  .pa-page{padding:14px 12px 40px}
+  .pa-viewhead{flex-direction:column;align-items:flex-start;gap:2px}
+  .pa-kpis{grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px}
+  .pa-kpi .k-val{font-size:24px}
+
+  /* detail form breathing room */
+  .pa-detailhead{padding:14px 14px 0}
+  .pa-detailhead .dh-top{flex-direction:column;gap:8px}
+  .pa-quickfacts{gap:12px 20px}
+  .pa-tabs{padding:10px 12px 0}
+  .pa-tabbody{padding:14px}
+  .pa-ai,.pa-side{padding:12px}
+
+  /* bars: label above its track instead of a fixed 150px gutter */
+  .pa-barrow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"label label" "track value";gap:4px 10px}
+  .pa-barrow .b-label{grid-area:label;white-space:normal}
+  .pa-barrow .b-track{grid-area:track}
+  .pa-barrow .b-val{grid-area:value}
+
+  /* checks: status badge drops below the rule text */
+  .pa-check{grid-template-columns:22px 1fr}
+  .pa-check > :last-child{grid-column:2}
+
+  /* hierarchy tree: tighter indents so deep nodes still fit */
+  .pa-node{flex-wrap:wrap;row-gap:4px}
+  .pa-tree .lvl1{margin-left:12px}
+  .pa-tree .lvl2{margin-left:24px}
+  .pa-tree .lvl3{margin-left:36px}
+}
+@media(max-width:420px){
+  .pa-appbar-tools .pa-iconbtn[title="Settings"],.pa-appbar-tools .pa-iconbtn[title="Help"]{display:none}
+  .pa-briefback span{display:none}
+  .pa-briefback{padding:0 10px}
+}
+
+/* ---------------------------------------------------------------------------
+   Phone frame. OPT-IN: everything below is scoped to body.phone, so a demo
+   that does not set that class is byte-for-byte unaffected. A demo whose whole
+   point is the device (a field inspection app) asks for it with
+   document.body.classList.add('phone') and is then rendered in a handset-sized
+   column on desktop, and edge to edge on an actual phone.
+
+   The class goes on <body> rather than inside the app markup because PA.app
+   replaces #app on every route change; a class on the element it rebuilds
+   would not survive navigation.
+   --------------------------------------------------------------------------- */
+body.phone{background:var(--canvas);padding:0}
+body.phone #app{
+  max-width:412px;margin:0 auto;height:100vh;height:100dvh;
+  box-shadow:0 0 0 1px var(--stroke),0 18px 50px rgba(0,0,0,.22);
+  background:var(--surface);overflow:hidden
+}
+@media(min-width:520px){
+  body.phone{padding:18px 0}
+  body.phone #app{height:calc(100vh - 36px);border-radius:22px}
+  body.phone .pa{border-radius:22px;overflow:hidden}
+}
+/* A handset has no room for a docked rail; the waffle drawer is the only mode.
+   This repeats the narrow-viewport drawer rather than inheriting it, because
+   that block keys off the VIEWPORT and the frame is 412px inside a desktop
+   window that is not. The scrim is absolute here, not fixed, so it dims the
+   frame rather than the whole screen behind it. */
+body.phone .pa-rail{
+  position:absolute;left:0;top:0;bottom:0;z-index:25;
+  width:min(78%,240px);height:auto;box-shadow:var(--shadow-8);
+  transition:transform .18s ease;overscroll-behavior:contain;
+}
+body.phone .pa-rail.collapsed{transform:translateX(-100%);width:min(78%,240px)}
+body.phone .pa-rail.collapsed .pa-nav-label,
+body.phone .pa-rail.collapsed .pa-nav-group{display:block}
+body.phone .pa-scrim{display:block;position:absolute;inset:0;z-index:24}
+body.phone .pa-rail:not(.collapsed) + .pa-scrim{opacity:1;pointer-events:auto}
+body.phone .pa-appname small,body.phone .pa-appname .dot{display:none}
+body.phone .pa-appbar-tools .pa-iconbtn{display:none}
+body.phone .pa-env{display:none}
+/* command bars are desktop furniture; the phone gets search and nothing else */
+body.phone .pa-cmdgroup{display:none}
+body.phone .pa-cmdbar{padding:8px 10px}
+body.phone .pa-search{flex:1 1 auto;min-width:0}
+body.phone .pa-crumb{display:flex;min-width:0}
+body.phone .pa-cmdgroup.right{display:flex;flex-wrap:wrap;gap:6px}
+body.phone .pa-cmdgroup.right .pa-cmd:not(.primary):not(.backbtn){display:none}
+body.phone .pa-page{padding:12px 10px 28px}
+body.phone .pa-kpis{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+body.phone .pa-kpi{padding:10px 12px}
+body.phone .pa-kpi .k-val{font-size:21px}
+body.phone .pa-gallery{grid-template-columns:1fr;gap:10px}
+body.phone .pa-viewhead h1{font-size:19px}
+body.phone .pa-cols{grid-template-columns:1fr}
+body.phone .pa-fields{grid-template-columns:1fr}
+body.phone .pa-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+body.phone .pa-tab{white-space:nowrap}
+body.phone .pa-detailhead{padding:14px}
+body.phone .pa-quickfacts{grid-template-columns:1fr 1fr}

@@ -1,0 +1,114 @@
+# .github/workflows/deploy.yml — lives in the template repo, inherited by every client portal.
+# Deploys public/ to Cloudflare on every push to main. No Cloudflare git integration needed,
+# so there is no browser authorization step to click through per repo.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The template repo runs this workflow too. It has no client and no
+      # domain, so it must skip rather than fail red on every push.
+      - name: Skip if this is the template
+        id: gate
+        run: |
+          slug=$(python3 -c 'import json;print(json.load(open("public/manifest.json"))["client"].get("slug") or "")')
+          if [ -z "$slug" ] || grep -q 'PORTAL_SLUG' wrangler.toml; then
+            echo "no client configured, this is the template"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The repo is private; the Worker is not. Repo privacy protects docs/ and
+      # nothing else. Everything under public/ is world-readable the moment this
+      # job succeeds, so the boundary is enforced here or not at all.
+      - name: Guard the public boundary
+        if: steps.gate.outputs.skip == 'false'
+        run: |
+          grep -q 'directory = "./public"' wrangler.toml \
+            || { echo "wrangler is not serving ./public; check the assets dir"; exit 1; }
+          ! find public/ -iname "*pursuit*" -o -iname "*internal*" | grep -q . \
+            || { echo "internal-looking file staged under public/"; exit 1; }
+          ! grep -rniE "win theme|competitor|pricing|do not publish|INTERNAL" public/ \
+            || { echo "internal content found in public/"; exit 1; }
+          # Compared against public/i/index.html, the shell they are copied from,
+          # so "never edited per slug" is what is actually enforced. find rather
+          # than a glob: a fresh portal has no public/i/<slug>/ yet, and an
+          # unmatched glob reaches md5sum literally and fails the step on a
+          # portal that has done nothing wrong. With no copies the source shell
+          # is the only hash, so this passes until the build prompt adds briefs.
+          test "$(find public/i -name index.html -exec md5sum {} + | awk '{print $1}' | sort -u | wc -l)" = "1" \
+            || { echo "brief pages have diverged from the shared shell"; exit 1; }
+
+      # Every other portal in the org is a client whose name must not appear in
+      # this one. The org's repo list IS the client list, so it is read live
+      # rather than maintained by hand. Display names come from each sibling's
+      # manifest, because a slug alone will not catch "Multi-Color Corporation".
+      - name: Build the denied-names list
+        if: steps.gate.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PORTAL_ORG_READ_TOKEN }}
+        run: |
+          set -euo pipefail
+          ORG="${GITHUB_REPOSITORY%%/*}"; SELF="${GITHUB_REPOSITORY#*/}"
+          : > /tmp/deny
+          grep -vE '^\s*(#|$)' .portal-denylist >> /tmp/deny || true
+
+          if [ -n "${GH_TOKEN:-}" ]; then
+            for repo in $(gh repo list "$ORG" --limit 200 --json name -q '.[].name'); do
+              [ "$repo" = "$SELF" ] && continue
+              echo "$repo" >> /tmp/deny
+              gh api "repos/$ORG/$repo/contents/public/manifest.json" \
+                 -H "Accept: application/vnd.github.raw" 2>/dev/null \
+                | python3 -c 'import json,sys;c=json.load(sys.stdin).get("client",{});print("\n".join(str(c.get(k,"")) for k in ("slug","short","name")))' \
+                 2>/dev/null >> /tmp/deny || true
+            done
+          else
+            echo "::warning::PORTAL_ORG_READ_TOKEN not set, using .portal-denylist only"
+          fi
+
+          # Exclude this client's own names, case-insensitively. Drop anything
+          # under 4 characters: a short slug word-matches far too much.
+          python3 -c 'import json;c=json.load(open("public/manifest.json")).get("client",{});print("\n".join(str(c.get(k,"")) for k in ("slug","short","name")))' > /tmp/self
+          grep -v '^$' /tmp/self > /tmp/self.clean || true
+
+          # An empty deny list is a legitimate state: the first portal in the org,
+          # no read token to enumerate siblings, and nothing added by hand. Under
+          # pipefail a grep that selects no lines exits 1 and takes the whole
+          # deploy down with it, which is how this failed closed on every push
+          # rather than only when there was something to deny. Filter only when
+          # there is something to filter; the next step already treats an empty
+          # deny.final as nothing to check. grep exit 2 is a real error and still
+          # fails the step.
+          : > /tmp/deny.final
+          if [ -s /tmp/deny ]; then
+            sort -u /tmp/deny | { grep -vixFf /tmp/self.clean || [ $? -eq 1 ]; } \
+              | awk 'length($0) >= 4 && $0 != "null"' > /tmp/deny.final
+          fi
+          echo "denying $(wc -l < /tmp/deny.final) names from $(basename $ORG)"
+          if [ ! -s /tmp/deny.final ]; then
+            echo "::warning::deny list is empty, the other-client guard checks nothing this run"
+          fi
+
+      # Word-boundary match, so a slug like "mcc" cannot fire on "McCarthy".
+      - name: Guard against other clients
+        if: steps.gate.outputs.skip == 'false'
+        run: |
+          if [ -s /tmp/deny.final ] && grep -rinwFf /tmp/deny.final public/; then
+            echo "another client's name appears under public/"; exit 1
+          fi
+
+      - name: Deploy
+        if: steps.gate.outputs.skip == 'false'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opportunity brief</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<main class="sheet">
+  <div class="colorbar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+
+  <a class="back" href="/">← All opportunities</a>
+  <div id="content"></div>
+  <footer id="footnote"></footer>
+</main>
+
+<script>
+const slug = location.pathname.split('/').filter(Boolean).pop();
+
+fetch('/manifest.json').then(r => r.json()).then(d => {
+  const i = d.ideas.find(x => x.slug === slug);
+  if (!i) {
+    document.getElementById('content').innerHTML =
+      '<h1>Opportunity not found</h1><p class="lede">Pick one from the list above.</p>';
+    return;
+  }
+  document.title = `${i.ref} · ${i.title} — ${d.client.short}`;
+  document.getElementById('footnote').textContent = `Field names are indicative, not a schema. They show the shape of the data so samples can be scoped. Finalize against ${d.client.short}'s actual systems during discovery.`;
+
+  const call = d.calls[i.call];
+  const grp = d.groups[i.group];
+  const src = d.sampleSources[i.io.sampleSource];
+  const boxClass = i.io.sampleSource === 'mockable' ? 'mockable' : i.io.sampleSource === 'reuse' ? 'reuse' : '';
+
+  // Qualifiers that must travel with the item, per the manifest contract.
+  // Group-level rules are structural and live here. Item-level rules are DATA:
+  // they come from ideas[].qualifiers[] so this shell stays client-agnostic.
+  const quals = [];
+  Object.keys(d.groups || {}).forEach(g => {
+    if (i.group !== g) return;
+    const rule = (d.groups[g] || {}).qualifier;
+    if (rule) quals.push([rule.label, rule.body || d.groups[g].blurb]);
+  });
+  (i.qualifiers || []).forEach(q => quals.push([q.label, q.body]));
+
+  const hasRegions = Array.isArray(i.regions) && i.regions.length && d.operatingRegionModel;
+  const regionRows = !hasRegions ? '' : i.regions.map(t => {
+    const m = d.operatingRegionModel[t];
+    return `<tr><td class="title" data-label="Region">${t}</td><td data-label="Role">${m.role}</td><td data-label="Notes">${m.note}</td></tr>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="detail-head">
+      <p class="eyebrow">${i.ref} · Opportunity ${String(i.id).padStart(2,'0')} · ${i.tagline}</p>
+      <h1>${i.title}</h1>
+      <p class="classline">
+        <span class="build">${call.label}</span>
+        <span class="wave">${grp.label}</span>
+        <span class="wave">${i.waveLabel}</span>
+      </p>
+      <div class="badges" style="margin-bottom:18px">
+        ${i.shortlist ? '<span class="badge shortlist">Where we\'d start</span>' : ''}
+        ${i.flagship ? '<span class="badge mock">Flagship</span>' : ''}
+        ${i.group === 'B' ? '<span class="badge rsm">Not a stated ask</span>' : ''}
+        <span class="badge">${src.label}</span>
+      </div>
+      <div class="prose">
+        <p style="color:var(--ink);font-size:16px">${i.pitch}</p>
+        <p>${i.body}</p>
+        ${i.quote ? `<blockquote>“${i.quote.text}”<cite>${i.quote.attr}</cite></blockquote>` : ''}
+        <p style="font-size:13.5px;color:var(--ink-60)"><b>How it gets built.</b> ${call.label} — ${call.note} ${i.callNote}</p>
+        ${i.mockup ? `<p style="margin:26px 0 6px;display:flex;flex-wrap:wrap;gap:12px"><a href="/m/${i.mockup}" style="display:inline-flex;align-items:center;gap:10px;background:var(--action-primary,#00727e);color:#fff;font-size:16px;font-weight:600;padding:15px 30px;border-radius:8px;text-decoration:none;letter-spacing:.2px;box-shadow:0 3px 10px rgba(0,0,0,.16)">${i.mockup2 ? 'Open the phone view' : 'Open the interactive demo'} <span style="font-size:19px;line-height:1">→</span></a>${i.mockup2 ? `<a href="/m/${i.mockup2}" style="display:inline-flex;align-items:center;gap:10px;background:var(--surface-card);color:var(--ink);border:1px solid var(--border-strong);font-size:16px;font-weight:600;padding:15px 30px;border-radius:8px;text-decoration:none;letter-spacing:.2px">${i.mockup2Label} <span style="font-size:19px;line-height:1">→</span></a>` : ''}</p>` : ''}
+      </div>
+    </div>
+
+    <h2 class="section">Sample architecture</h2>
+    <div class="arch">
+      ${i.architecture.map((b, n) => `
+        <div class="box ${b.ink}"><b>${b.node}</b><span>${b.sub}</span></div>
+        ${n < i.architecture.length - 1 ? '<span class="arrow">→</span>' : ''}`).join('')}
+    </div>
+
+    ${hasRegions ? `<h2 class="section">Where it runs</h2>
+    <table>
+      <thead><tr><th style="width:22%">Region</th><th style="width:24%">Role</th><th>Notes</th></tr></thead>
+      <tbody>${regionRows}</tbody>
+    </table>` : ''}
+
+    <h2 class="section">Input and output</h2>
+    <div class="io">
+      <div>
+        <h3>Input</h3>
+        <ul>${i.io.inputs.map(x => `<li>${x}</li>`).join('')}</ul>
+      </div>
+      <div>
+        <h3>Expected output</h3>
+        <ul>${i.io.outputs.map(x => `<li>${x}</li>`).join('')}</ul>
+      </div>
+    </div>
+    <div class="fields">${i.io.fields.map(f => `<span class="field">${f}</span>`).join('')}</div>
+
+    <div class="ask-box ${boxClass}">
+      <h3>${src.label} · ${i.io.owner}</h3>
+      <p>${i.io.ask}</p>
+      <p style="color:var(--ink-30)">${i.io.why}</p>
+    </div>
+
+    ${quals.length ? `<h2 class="section">Qualifiers that travel with this</h2>
+      ${quals.map(q => `<div class="qualifier"><h3>${q[0]}</h3><p>${q[1]}</p></div>`).join('')}` : ''}`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{
+  "client": {
+    "slug": "",
+    "name": "",
+    "short": "",
+    "subtitle": "",
+    "author": "",
+    "practice": "RSM One Microsoft Practice",
+    "basis": "",
+    "team": "AI opportunity portfolio",
+    "source": "",
+    "lede": "",
+    "setup": [],
+    "sequence": "",
+    "qualifierNote": "Items marked <b>Not a stated ask</b> are RSM recommendations rather than client requirements. Both qualifiers travel with them. "
+  },
+  "calls": {
+    "d365": {
+      "label": "D365-native",
+      "ink": "core",
+      "note": "Configuration or extension inside D365 itself."
+    },
+    "power": {
+      "label": "Power Platform",
+      "ink": "platform",
+      "note": "Copilot Studio, Power Apps, Power Automate or Power Pages on top of D365 data."
+    },
+    "azure": {
+      "label": "Azure AI service",
+      "ink": "azure",
+      "note": "Sits beside D365 and consumes or feeds it."
+    },
+    "buy": {
+      "label": "Buy, not build",
+      "ink": "buy",
+      "note": "Already out of the box. Do not custom-build."
+    },
+    "configure": {
+      "label": "Configure",
+      "ink": "config",
+      "note": "Ships as configuration, not a build."
+    }
+  },
+  "groups": {
+    "A": {
+      "label": "Stated ask",
+      "blurb": "The client asked for these in writing."
+    },
+    "B": {
+      "label": "Not a stated ask",
+      "blurb": "RSM-recommended. Genuinely useful, but RSM's proposal rather than a client requirement. The qualifier travels with every one.",
+      "qualifier": {
+        "label": "RSM-authored, not a client ask",
+        "body": "This opportunity does not trace to a client requirement. It is an RSM recommendation."
+      }
+    },
+    "C": {
+      "label": "Buy or configure",
+      "blurb": "Do not build. Native capability or configuration, listed so the build sequence accounts for it."
+    },
+    "D": {
+      "label": "From the discovery call",
+      "blurb": "Raised directly by client leadership on a call rather than in the written requirements.",
+      "qualifier": {
+        "label": "Raised on the discovery call, not in the requirements",
+        "body": "This comes from a call with client leadership rather than the written requirements."
+      }
+    }
+  },
+  "sampleSources": {
+    "ask_client": {
+      "label": "Sample data needed",
+      "note": "We would need real files or extracts from the client to build this credibly."
+    },
+    "mockable": {
+      "label": "Demo data ready",
+      "note": "We can stand up a convincing demo set without waiting on data."
+    },
+    "reuse": {
+      "label": "Shares data",
+      "note": "Uses the same data as another opportunity."
+    }
+  },
+  "ideas": []
+}

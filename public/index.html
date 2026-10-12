@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI opportunity portfolio</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<main class="sheet">
+  <div class="colorbar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+
+  <p class="eyebrow" id="eyebrow"></p>
+  <h1 id="title"></h1>
+  <p class="lede" id="lede"></p>
+  <div class="meta" id="meta"></div>
+
+  <nav class="top">
+    <a href="/" aria-current="page">Opportunities</a>
+    <a href="/data-asks">Data we'd need</a>
+  </nav>
+
+  <section class="constraints" id="constraints"></section>
+
+  <h2 class="section" id="readiness-head">AI readiness — the profile that sets the order</h2>
+  <div class="readiness" id="readiness"></div>
+  <p class="lede" id="sequence" style="margin-top:18px;font-size:14px"></p>
+
+  <div class="filters">
+    <span class="label">Filter</span>
+    <button class="chip" data-filter="shortlist">Where we'd start</button>
+    <button class="chip" data-filter="group:D">From the call</button>
+    <button class="chip" data-filter="group:A">Stated ask</button>
+    <button class="chip" data-filter="group:B">RSM-recommended</button>
+    <button class="chip" data-filter="group:C">Buy or configure</button>
+    <button class="chip" data-filter="ask">Sample data needed</button>
+  </div>
+
+  <section class="grid" id="grid"></section>
+
+  <footer id="footer"></footer>
+</main>
+
+<script>
+let DATA, active = new Set();
+
+function card(i) {
+  const call = DATA.calls[i.call];
+  const badges = [
+    i.shortlist ? '<span class="badge shortlist">Where we\'d start</span>' : '',
+    i.flagship ? '<span class="badge mock">Flagship</span>' : '',
+    i.group === 'B' ? '<span class="badge rsm">Not a stated ask</span>' : '',
+    i.group === 'D' ? '<span class="badge call">From the call</span>' : '',
+    i.ref === 'B8' ? '<span class="badge whitespace">White space</span>' : '',
+    i.io.sampleSource === 'ask_client' ? '<span class="badge ask">Sample data needed</span>' : '',
+    i.io.sampleSource === 'mockable' ? '<span class="badge">Demo data ready</span>' : '',
+    i.io.sampleSource === 'reuse' ? '<span class="badge">Shares data</span>' : ''
+  ].join('');
+  // regions is optional per the contract, "omit for single-region clients", so it
+  // has to be treated as absent rather than assumed to be an array.
+  const regions = (i.regions || []).map(t =>
+    `<span class="tenant ${(DATA.operatingRegionModel || {})[t]?.kind === 'parent' ? 'parent' : ''}">${t}</span>`
+  ).join('');
+  return `<a class="label-card" href="/i/${i.slug}">
+    <span class="ink-strip ink-${call.ink}"></span>
+    <div class="card-head">
+      <span class="num">${i.ref} · ${String(i.id).padStart(2, '0')}</span>
+      <span class="tagline">${i.tagline}</span>
+    </div>
+    <h2>${i.title}</h2>
+    <p class="classline"><span class="build">${call.label}</span><span class="wave">${i.waveLabel}</span></p>
+    <p class="pitch">${i.pitch}</p>
+    <div class="badges">${badges}</div>
+    <div class="tenants">${regions}</div>
+  </a>`;
+}
+
+// One predicate for one filter, so the chips and the grid can never disagree
+// about what a filter means.
+function matchesOne(i, f) {
+  if (f === 'shortlist') return !!i.shortlist;
+  if (f === 'ask') return i.io.sampleSource === 'ask_client';
+  if (f.startsWith('group:')) return i.group === f.slice(6);
+  return true;
+}
+
+function matches(i) {
+  if (!active.size) return true;
+  for (const f of active) if (!matchesOne(i, f)) return false;
+  return true;
+}
+
+// A chip with nothing behind it is a promise the page cannot keep: the reader
+// clicks it on the landing page and lands on an empty state. The chip row is
+// static markup covering every group the contract defines, but a given portfolio
+// will not use them all, so the chips are reconciled against the data rather
+// than the taxonomy. Drop the whole row if nothing survives, which is what a
+// scaffolded portal with no ideas yet gets.
+function pruneChips() {
+  document.querySelectorAll('.chip').forEach(btn => {
+    if (!DATA.ideas.some(i => matchesOne(i, btn.dataset.filter))) btn.remove();
+  });
+  if (!document.querySelector('.chip')) {
+    const row = document.querySelector('.filters');
+    if (row) row.style.display = 'none';
+  }
+}
+
+function render() {
+  const list = DATA.ideas.filter(matches);
+  document.getElementById('grid').innerHTML = list.length
+    ? list.map(card).join('')
+    : '<p class="lede">Nothing matches that combination — the group filters are mutually exclusive.</p>';
+}
+
+fetch('/manifest.json').then(r => r.json()).then(d => {
+  DATA = d;
+  const c = d.client;
+  document.getElementById('eyebrow').textContent = `${c.team} · ${c.basis}`;
+  document.getElementById('title').textContent = `${c.short} — ${c.subtitle}`;
+  document.getElementById('lede').textContent = c.lede;
+  // Counted from groups[] rather than a hardcoded list of four, so the parts
+  // always sum to the total. The old line named A to D literally and silently
+  // under-counted any portfolio using a group outside that set, which is the
+  // same copied-forward assumption that put another client's extracts on the
+  // data-asks page. Groups with nothing in them are left out.
+  const groupCounts = Object.keys(d.groups || {})
+    .map(g => ({ n: d.ideas.filter(i => i.group === g).length, label: (d.groups[g].label || g).toLowerCase() }))
+    .filter(x => x.n)
+    .map(x => `${x.n} ${x.label}`)
+    .join(', ');
+  document.getElementById('meta').innerHTML = `
+    ${c.theme ? `<div><b>Theme</b> ${c.theme}</div>` : ''}
+    <div><b>Prepared by</b> ${c.author}, ${c.practice}</div>
+    <div><b>Opportunities</b> ${d.ideas.length}${groupCounts ? ` — ${groupCounts}` : ''}</div>`;
+  document.getElementById('constraints').innerHTML = c.setup.map(s =>
+    `<div class="constraint"><h3>${s.label}</h3><p>${s.body}</p></div>`).join('');
+  // readiness is optional, and the contract says never to invent scores. Dereferencing
+  // it unconditionally meant a scaffolded portal had to either fabricate a profile or
+  // ship a landing page that threw before rendering a single card. Absent is now a
+  // supported state: the section hides rather than the page dying.
+  const readiness = c.readiness || [];
+  document.getElementById('readiness').innerHTML = readiness.map(r =>
+    `<div class="rd ${r.tone}"><div class="rd-l">${r.label}</div><div class="rd-v">${r.value}</div></div>`).join('');
+  if (!readiness.length) document.getElementById('readiness-head').style.display = 'none';
+  document.getElementById('sequence').innerHTML = `<b>Recommended order.</b> ${c.sequence}`;
+  document.getElementById('footer').innerHTML =
+    'Each brief carries an illustrative reference architecture, not a final design. ' +
+    (d.client.qualifierNote || '') +
+    'The incumbent ERP is unverified and is never named here as fact. ' +
+    `${c.basis}.`;
+  pruneChips();
+  render();
+});
+
+document.querySelectorAll('.chip').forEach(btn => {
+  btn.setAttribute('aria-pressed', 'false');
+  btn.addEventListener('click', () => {
+    const f = btn.dataset.filter;
+    // group filters are mutually exclusive — selecting one clears the others
+    if (f.startsWith('group:')) {
+      document.querySelectorAll('.chip').forEach(o => {
+        if (o !== btn && o.dataset.filter.startsWith('group:')) {
+          active.delete(o.dataset.filter);
+          o.setAttribute('aria-pressed', 'false');
+        }
+      });
+    }
+    if (active.has(f)) { active.delete(f); btn.setAttribute('aria-pressed', 'false'); }
+    else { active.add(f); btn.setAttribute('aria-pressed', 'true'); }
+    render();
+  });
+});
+</script>
+</body>
+</html>

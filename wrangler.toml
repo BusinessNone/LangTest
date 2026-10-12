@@ -1,0 +1,15 @@
+#:schema node_modules/wrangler/config-schema.json
+#
+# Written per client by new-portal.sh. Static assets only, no Worker script.
+# THE SITE IS PUBLIC. The repo is private; the Worker is not. Repo privacy
+# protects docs/ and nothing else. Everything under public/ is world-readable.
+
+name = "PORTAL_SLUG"
+compatibility_date = "2026-08-07"
+
+routes = [
+  { pattern = "PORTAL_SLUG.powerfactory.io", custom_domain = true }
+]
+
+[assets]
+directory = "./public"

@@ -1,0 +1,14 @@
+# Names that must never appear under public/. One per line, case-insensitive.
+# The deploy workflow fails the build if any of these is found.
+#
+# Other portals in the org are added AUTOMATICALLY at deploy time by reading
+# the org repo list and each sibling's manifest. Do not list them here.
+#
+# Add by hand, per portal:
+#   - this client's competitors, by every name they trade under
+#   - any name that must never appear for a reason the org list cannot know
+#
+# Counterparty names in demo data are invented, not real. This file is the
+# backstop for the ones judgment misses, not a substitute for inventing them.
+
+# --- this client's competitors ---

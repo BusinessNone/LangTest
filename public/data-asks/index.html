@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data asks</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<main class="sheet">
+  <div class="colorbar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+
+  <p class="eyebrow">Sample data · what we need to build</p>
+  <h1>Data asks</h1>
+  <p class="lede" id="lede"></p>
+
+  <nav class="top">
+    <a href="/">Opportunities</a>
+    <a href="/data-asks" aria-current="page">Data asks</a>
+  </nav>
+
+  <section class="constraints" id="named"></section>
+
+  <div id="groups"></div>
+
+  <h2 class="section">We can build these without you</h2>
+  <table id="nonasks"><thead><tr><th style="width:30%">Opportunity</th><th style="width:22%">Approach</th><th>What sharpens it</th></tr></thead><tbody></tbody></table>
+
+  <div class="qualifier" style="margin-top:34px">
+    <h3>One ask we cannot scope yet</h3>
+  </div>
+
+  <footer>Anonymized extracts are fine. Subsets are fine. Real structure matters more than volume.</footer>
+</main>
+
+<script>
+fetch('/manifest.json').then(r => r.json()).then(d => {
+  const asks = d.ideas.filter(i => i.io.sampleSource === 'ask_client');
+
+  // The extracts that gate the build, called out ahead of the full list. This is DATA:
+  // it comes from client.namedAsks[] so this page stays client-agnostic. Hardcoding the
+  // list here means the next portal inherits the last one's extracts, and because every
+  // ref still resolves to *something* the page looks correct while naming another client.
+  // An unresolvable ref is skipped rather than thrown on, so a retitled idea degrades
+  // to a missing callout instead of a blank page.
+  const named = (d.client.namedAsks || [])
+    .map(n => ({ n, idea: d.ideas.find(i => i.ref === n.ref) }))
+    .filter(x => x.idea);
+  document.getElementById('named').innerHTML = named.map(({ n, idea }) =>
+    `<div class="constraint"><h3>${n.label}</h3><p>${n.body} <a href="/i/${idea.slug}" style="color:var(--text-link)">${n.ref}</a></p></div>`
+  ).join('');
+
+  const owners = [...new Set(asks.map(i => i.io.owner))];
+  document.getElementById('groups').innerHTML = owners.map(o => `
+    <h2 class="section">${o}</h2>
+    <table>
+      <thead><tr><th style="width:26%">Opportunity</th><th style="width:44%">What we need</th><th>Why real data</th></tr></thead>
+      <tbody>
+        ${asks.filter(i => i.io.owner === o).map(i => `
+          <tr>
+            <td class="title" data-label="Opportunity"><a href="/i/${i.slug}">${i.ref} · ${i.title}</a></td>
+            <td data-label="What we need">${i.io.ask}</td>
+            <td data-label="Why real data">${i.io.why}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`).join('');
+
+  const rest = d.ideas.filter(i => i.io.sampleSource !== 'ask_client');
+  document.querySelector('#nonasks tbody').innerHTML = rest.map(i => `
+    <tr>
+      <td class="title" data-label="Opportunity"><a href="/i/${i.slug}">${i.ref} · ${i.title}</a></td>
+      <td data-label="Approach">${d.sampleSources[i.io.sampleSource].label}</td>
+      <td data-label="What sharpens it">${i.io.ask}</td>
+    </tr>`).join('');
+});
+</script>
+</body>
+</html>
